@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import Confetti from 'react-confetti';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, User, ExternalLink, PiggyBank, Star, X } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PromptHeader } from './Header'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PromptPopupProps {
   purchasePrice: number | null;
@@ -80,7 +80,7 @@ export default function PromptPopup({ purchasePrice }: PromptPopupProps) {
             <span>Hey, {userName}!</span>
           </div>
           <a
-            href="https://hesto.org"
+            href="https://hesto.io"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-emerald-700 hover:text-emerald-800 transition-colors flex items-center"
