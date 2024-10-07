@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Hesto Extension",
+  "description": "A little hesitation goes a long way.",
+  "version": "1.0",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+   "16": "pause.png",
+   "32": "pause.png",
+   "48": "pause.png",
+   "128": "pause.png"
+  },
+  "permissions": ["tabs"]
+}
