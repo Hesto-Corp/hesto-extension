@@ -17,6 +17,9 @@ const App = () => {
         }
       }
     });
+
+    chrome.runtime.connect({ name: 'popup_lifecycle' }); // TODO: Ehh gotta debug this.
+
   }, []);
 
   return (

@@ -156,8 +156,9 @@ document.addEventListener('click', (event) => {
     addDimOverlay();
   } else {
     console.log('No actionable element found for the click.');
+
     // TODO: this is a hack also doesn't work on clicking I really want this.
-    removeDimOverlay();
+    // removeDimOverlay();
   }
 });
 
@@ -166,6 +167,7 @@ document.addEventListener('click', (event) => {
 // Listen for messages from the background script to remove the overlay
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'close_popup') {
+    console.log("Removing Dimming!!!!");
     removeDimOverlay();
   }
 });
