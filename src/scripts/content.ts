@@ -1,5 +1,23 @@
-// ==Overlay Management==
+// Wrapper to safely send messages to the background script
+function safeSendMessage(message: any) {
+  if (!chrome.runtime || !chrome.runtime.sendMessage) {
+    console.warn("Cannot send message, extension context might be invalid.");
+    return;
+  }
+  try {
+    chrome.runtime.sendMessage(message, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn("Error in sending message:", chrome.runtime.lastError.message);
+      } else {
+        console.log("Message sent successfully:", response);
+      }
+    });
+  } catch (error) {
+    console.error("Failed to send message:", error);
+  }
+}
 
+// ==Overlay Management==
 // Function to add a dimming overlay to the webpage
 function addDimOverlay() {
   if (document.getElementById('dim-overlay')) {
@@ -150,7 +168,7 @@ document.addEventListener('click', (event) => {
     }
 
     // Send message to open the popup
-    chrome.runtime.sendMessage({ action: 'open_space_popup', price: price || 'Price not found' });
+    safeSendMessage({ action: 'open_space_popup', price: price || 'Price not found' });
     savePopupData('open_space_popup', price || 0);
 
     addDimOverlay();
