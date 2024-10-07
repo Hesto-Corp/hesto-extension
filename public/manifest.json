@@ -4,13 +4,36 @@
   "description": "A little hesitation goes a long way.",
   "version": "1.0",
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "pause.png",
+      "32": "pause.png",
+      "48": "pause.png",
+      "128": "pause.png"
+    }
   },
   "icons": {
-   "16": "pause.png",
-   "32": "pause.png",
-   "48": "pause.png",
-   "128": "pause.png"
+    "16": "pause.png",
+    "32": "pause.png",
+    "48": "pause.png",
+    "128": "pause.png"
   },
-  "permissions": ["tabs"]
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }
