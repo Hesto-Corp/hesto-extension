@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         // Define index.html as the entry point for the popup
         popup: resolve(__dirname, 'index.html'),
+
         // Define background and content scripts for Chrome Extension
         background: resolve(__dirname, 'src/scripts/background.ts'),
         content: resolve(__dirname, 'src/scripts/content.ts'),
