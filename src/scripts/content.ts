@@ -1,58 +1,8 @@
-// Wrapper to safely send messages to the background script
-function safeSendMessage(message: any) {
-  if (!chrome.runtime || !chrome.runtime.sendMessage) {
-    console.warn("Cannot send message, extension context might be invalid.");
-    return;
-  }
-  try {
-    chrome.runtime.sendMessage(message, (response) => {
-      if (chrome.runtime.lastError) {
-        console.warn("Error in sending message:", chrome.runtime.lastError.message);
-      } else {
-        console.log("Message sent successfully:", response);
-      }
-    });
-  } catch (error) {
-    console.error("Failed to send message:", error);
-  }
-}
+import { safeSendMessage } from './utils/messaging'
+import { addDimOverlay, removeDimOverlay} from './utils/overlay'
 
-// ==Overlay Management==
-// Function to add a dimming overlay to the webpage
-function addDimOverlay() {
-  if (document.getElementById('dim-overlay')) {
-    console.log('Overlay already exists');
-    return; // Avoid adding the overlay multiple times
-  }
-
-  // Create an overlay element
-  const overlay = document.createElement('div');
-  overlay.id = 'dim-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Semi-transparent black
-  overlay.style.zIndex = '9998'; // Set the overlay to cover everything on the webpage but still below the popup
-  overlay.style.pointerEvents = 'none'; // Ensure it doesn't block interactions with the extension popup
-
-  // Append the overlay to the body
-  document.body.appendChild(overlay);
-  console.log('Overlay added');
-}
-
-// Function to remove the dimming overlay
-function removeDimOverlay() {
-  const overlay = document.getElementById('dim-overlay');
-  if (overlay) {
-    overlay.remove();
-    console.log('Overlay removed');
-  }
-}
 
 // ==Utility Functions==
-
 // Function to recursively extract text from an element and its children
 function getDeepText(element: HTMLElement): string {
   let text = '';
