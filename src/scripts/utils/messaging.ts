@@ -23,6 +23,6 @@ export function safeSendMessage(message: any) {
       }
     });
   } catch (error) {
-    console.error("Failed to send message:", error);
+    console.warn("Failed to send message:", error);
   }
 }
