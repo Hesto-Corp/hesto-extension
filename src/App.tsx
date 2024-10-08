@@ -4,9 +4,15 @@ import IdlePopup from '@/components/IdlePopup';
 import PromptPopup from '@/components/PromptPopup';
 // import AuthPopup from '@/components/AuthPopup';
 
+// import { PopupState } from './scripts/utils/structures';
+
+enum PopupState {
+  Idle,
+  Detected,
+}
+
 const App = () => {
-  // TODO Use Enum here, and make it handle different popup types
-  const [popupType, setPopupType] = useState<'idle' | 'detected'>('idle');
+  const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
 
   useEffect(() => {
@@ -16,8 +22,11 @@ const App = () => {
         const newPopupData = changes.popupData.newValue;
         console.log('Data changed in Chrome storage:', newPopupData);
 
-        if (newPopupData?.product?.price) {
-          setPopupType('detected');
+        if (newPopupData?.state !== undefined) {
+          setPopupType(newPopupData.state);
+        }
+
+        if (newPopupData?.state === PopupState.Detected && newPopupData?.product?.price) {
           setPurchasePrice(newPopupData.product.price);
         }
       }
@@ -27,10 +36,13 @@ const App = () => {
     chrome.storage.local.get(['popupData'], (result) => {
       if (result.popupData) {
         console.log('Initial data retrieved from Chrome storage:', result.popupData);
-        if (result.popupData.product.price) {
-          setPopupType('detected');
-          setPurchasePrice(result.popupData.product.price);
 
+        if (result.popupData?.state !== undefined) {
+          setPopupType(result.popupData.state);
+        }
+
+        if (result.popupData?.state === PopupState.Detected && result.popupData?.product?.price) {
+          setPurchasePrice(result.popupData.product.price);
         }
       }
 
@@ -45,12 +57,11 @@ const App = () => {
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, []);
-
+  }, []); // Empty dependency array ensures this runs only once (on mount)
 
   return (
     <div>
-      {popupType === 'idle' ? (
+      {popupType === PopupState.Idle ? (
         <IdlePopup />
       ) : (
         <PromptPopup purchasePrice={purchasePrice} />
