@@ -18,5 +18,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.content.ts",    // Include content config
+    "vite.config.background.ts", // Include background config
+    "vite.config.popup.ts"       // Include popup config
+  ]
 }
