@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import IdlePopup from '@/components/IdlePopup';
+// import IdlePopup from '@/components/IdlePopup';
 import PromptPopup from '@/components/PromptPopup';
-// import AuthPopup from '@/components/AuthPopup';
+import AuthPopup from '@/components/AuthPopup';
 
 import { PopupState } from './scripts/utils/stateManagement';
 
@@ -57,7 +57,8 @@ const App = () => {
   return (
     <div>
       {popupType === PopupState.Idle ? (
-        <IdlePopup />
+        // <IdlePopup />
+        <AuthPopup />
       ) : (
         <PromptPopup purchasePrice={purchasePrice} />
       )}
