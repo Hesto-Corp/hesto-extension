@@ -25,17 +25,18 @@ document.addEventListener('click', (event) => {
     }
 
     // Send message to open the popup
-    // TODO
-    savePopupData(price || 0); // Save to Chrome Storage
+    savePopupDataToStorage({
+      state: DetectionState.Detected,
+      product: { name: 'Example Product', price, currency: 'USD' }
+    });
 
     safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup
-
     addDimOverlay();
+
   } else {
     console.log('No actionable element found for the click.');
   }
 });
-
 
 // Listen for messages from the background script to remove the overlay
 chrome.runtime.onMessage.addListener((message) => {
@@ -45,10 +46,9 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 
-// Chrome Storage: Save popup data
-function savePopupData(price: number | string) {
-  chrome.storage.local.set({ popupData: { price } }, () => {
-    console.log('Popup data has been set in Chrome storage.');
+function savePopupDataToStorage(popupData: PopupData) {
+  chrome.storage.local.set({ popupData }, () => {
+    console.log('Popup data has been set in Chrome storage:', popupData);
   });
 }
 
@@ -59,9 +59,9 @@ export enum DetectionState {
 }
 
 export interface Product{
-  name: string
-  price: number
-  currency: string
+  name: string | null
+  price: number | null
+  currency: string | null
   url?: Url
 }
 

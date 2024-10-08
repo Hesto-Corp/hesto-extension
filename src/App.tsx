@@ -8,15 +8,17 @@ const App = () => {
   const [popupType, setPopupType] = useState<'default' | 'space'>('default');
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
 
+  // TODO: Clean this up!
+
   useEffect(() => {
     // Read data from Chrome storage
     chrome.storage.local.get(['popupData'], (result) => {
       if (result.popupData) {
         console.log('Data retrieved from Chrome storage:', result.popupData);
-        if (result.popupData.price) {
+        if (result.popupData.product.price) {
           setPopupType('space');
-          setPurchasePrice(result.popupData.price);
-          chrome.runtime.connect({ name: 'popup_lifecycle' }); // TODO: Ehh gotta debug this.
+          setPurchasePrice(result.popupData.product.price);
+          chrome.runtime.connect({ name: 'popup_lifecycle' });
         }
       }
     });
