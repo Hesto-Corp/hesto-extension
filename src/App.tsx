@@ -4,7 +4,7 @@ import IdlePopup from '@/components/IdlePopup';
 import PromptPopup from '@/components/PromptPopup';
 // import AuthPopup from '@/components/AuthPopup';
 
-import { PopupState } from './scripts/utils/structures';
+import { PopupState } from './scripts/utils/stateManagement';
 
 const App = () => {
   const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);

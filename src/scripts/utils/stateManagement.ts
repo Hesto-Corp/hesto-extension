@@ -4,6 +4,14 @@ export function savePopupDataToStorage(popupData: PopupData) {
   });
 }
 
+export function setToIdle() {
+  console.log("Setting Popup State to Idle");
+
+  chrome.storage.local.set({ popupData: { state: PopupState.Idle } }, () => {
+    console.log("Popup state has been set to Idle in Chrome storage.");
+  });
+}
+
 export enum PopupState {
   Idle,
   Detected,

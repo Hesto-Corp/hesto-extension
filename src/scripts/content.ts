@@ -1,7 +1,7 @@
 import { addDimOverlay, removeDimOverlay } from './utils/overlay'
 import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
 import { safeSendMessage } from './utils/messaging'
-import { savePopupDataToStorage } from './utils/structures'
+import { savePopupDataToStorage } from './utils/stateManagement'
 
 
 // Event listener for click events to detect purchasing intent
