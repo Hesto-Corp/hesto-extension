@@ -1,5 +1,5 @@
 /**
- * Safely sends a message to the background script or other parts of the extension.
+ * Safely sends a message to the background script.
  * 
  * This function ensures that the extension context is still valid before attempting
  * to send a message using `chrome.runtime.sendMessage()`. It handles any potential 

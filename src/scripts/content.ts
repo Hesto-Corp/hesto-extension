@@ -1,12 +1,13 @@
 import { addDimOverlay, removeDimOverlay } from './utils/overlay'
 import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
 import { safeSendMessage } from './utils/messaging'
+import { savePopupDataToStorage } from './utils/structures'
+
 
 // Event listener for click events to detect purchasing intent
 document.addEventListener('click', (event) => {
   const target = event.target as HTMLElement;
 
-  // Log details of the clicked target
   console.log('Clicked element:', target);
 
   // Find the closest actionable element (button, link, or input)
@@ -24,15 +25,18 @@ document.addEventListener('click', (event) => {
     }
 
     // Send message to open the popup
-    safeSendMessage({ action: 'open_space_popup', price: price || 'Price not found' });
-    savePopupData('open_space_popup', price || 0);
+    savePopupDataToStorage({
+      state: 1,
+      product: { name: 'Example Product', price, currency: 'USD' }
+    });
 
+    safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup.
     addDimOverlay();
+
   } else {
     console.log('No actionable element found for the click.');
   }
 });
-
 
 // Listen for messages from the background script to remove the overlay
 chrome.runtime.onMessage.addListener((message) => {
@@ -40,10 +44,3 @@ chrome.runtime.onMessage.addListener((message) => {
     removeDimOverlay();
   }
 });
-
-// Chrome Storage: Save popup data
-function savePopupData(action: string, price: number | string) {
-  chrome.storage.local.set({ popupData: { action, price } }, () => {
-    console.log('Popup data has been set in Chrome storage.');
-  });
-}

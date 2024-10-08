@@ -22,11 +22,13 @@
     {
       "matches": ["https://*/*", "http://*/*"],
       "js": ["content.js"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "type": "module"
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "permissions": [
     "activeTab",
