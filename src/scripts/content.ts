@@ -1,13 +1,13 @@
 import { addDimOverlay, removeDimOverlay } from './utils/overlay'
 import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
 import { safeSendMessage } from './utils/messaging'
-import { Url } from 'url';
+
+import {PopupState, savePopupDataToStorage} from './utils/data'
 
 // Event listener for click events to detect purchasing intent
 document.addEventListener('click', (event) => {
   const target = event.target as HTMLElement;
 
-  // Log details of the clicked target
   console.log('Clicked element:', target);
 
   // Find the closest actionable element (button, link, or input)
@@ -26,11 +26,11 @@ document.addEventListener('click', (event) => {
 
     // Send message to open the popup
     savePopupDataToStorage({
-      state: DetectionState.Detected,
+      state: PopupState.Detected,
       product: { name: 'Example Product', price, currency: 'USD' }
     });
 
-    safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup
+    safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup.
     addDimOverlay();
 
   } else {
@@ -44,29 +44,3 @@ chrome.runtime.onMessage.addListener((message) => {
     removeDimOverlay();
   }
 });
-
-
-function savePopupDataToStorage(popupData: PopupData) {
-  chrome.storage.local.set({ popupData }, () => {
-    console.log('Popup data has been set in Chrome storage:', popupData);
-  });
-}
-
-
-export enum DetectionState {
-  Idle,
-  Detected,
-}
-
-export interface Product{
-  name: string | null
-  price: number | null
-  currency: string | null
-  url?: Url
-}
-
-export interface PopupData {
-  state: DetectionState // Idle / Detected
-  product?: Product
-}
-
