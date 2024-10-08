@@ -1,3 +1,5 @@
+import { setToIdle } from './utils/stateManagement'
+
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'trigger_popup') {
     console.log("Background: Opening Popup!!!");
@@ -19,5 +21,6 @@ chrome.runtime.onConnect.addListener((port) => {
       }
     });
 
+    setToIdle();
   });
 });
