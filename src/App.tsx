@@ -13,7 +13,7 @@ const App = () => {
     chrome.storage.local.get(['popupData'], (result) => {
       if (result.popupData) {
         console.log('Data retrieved from Chrome storage:', result.popupData);
-        if (result.popupData.action === 'open_space_popup' && result.popupData.price) {
+        if (result.popupData.price) {
           setPopupType('space');
           setPurchasePrice(result.popupData.price);
           chrome.runtime.connect({ name: 'popup_lifecycle' }); // TODO: Ehh gotta debug this.

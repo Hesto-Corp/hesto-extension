@@ -1,6 +1,7 @@
 import { addDimOverlay, removeDimOverlay } from './utils/overlay'
 import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
 import { safeSendMessage } from './utils/messaging'
+import { Url } from 'url';
 
 // Event listener for click events to detect purchasing intent
 document.addEventListener('click', (event) => {
@@ -24,8 +25,10 @@ document.addEventListener('click', (event) => {
     }
 
     // Send message to open the popup
-    safeSendMessage({ action: 'open_space_popup', price: price || 'Price not found' });
-    savePopupData('open_space_popup', price || 0);
+    // TODO
+    savePopupData(price || 0); // Save to Chrome Storage
+
+    safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup
 
     addDimOverlay();
   } else {
@@ -41,9 +44,29 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
+
 // Chrome Storage: Save popup data
-function savePopupData(action: string, price: number | string) {
-  chrome.storage.local.set({ popupData: { action, price } }, () => {
+function savePopupData(price: number | string) {
+  chrome.storage.local.set({ popupData: { price } }, () => {
     console.log('Popup data has been set in Chrome storage.');
   });
 }
+
+
+export enum DetectionState {
+  Idle,
+  Detected,
+}
+
+export interface Product{
+  name: string
+  price: number
+  currency: string
+  url?: Url
+}
+
+export interface PopupData {
+  state: DetectionState // Idle / Detected
+  product?: Product
+}
+
