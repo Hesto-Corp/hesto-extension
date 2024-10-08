@@ -1,15 +1,38 @@
 import { useEffect, useState } from 'react';
 
-// import IdlePopup from '@/components/IdlePopup';
 import PromptPopup from '@/components/PromptPopup';
 import AuthPopup from '@/components/AuthPopup';
+import IdlePopup from '@/components/IdlePopup';
 
 import { PopupState } from './scripts/utils/stateManagement';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase.config'; // Import your Firebase auth config
 
 const App = () => {
   const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track user login state
 
+  // Firebase Authentication Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("On auth changed called!!!!");
+      if (user) {
+        console.log("User is logged in: ", user);
+        // User is logged in, update local storage and state
+        chrome.storage.local.set({ isLoggedIn: true });
+        setIsLoggedIn(true);
+      } else {
+        // User is logged out, update local storage and state
+        chrome.storage.local.set({ isLoggedIn: false });
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup listener on component unmount
+  }, []);
+
+  // Listen to changes in Chrome storage for popup state
   useEffect(() => {
     // Function to handle storage changes
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
@@ -54,13 +77,17 @@ const App = () => {
     };
   }, []); // Empty dependency array ensures this runs only once (on mount)
 
+  // Render logic based on login state and popup type
   return (
     <div>
-      {popupType === PopupState.Idle ? (
-        // <IdlePopup />
-        <AuthPopup />
+      {!isLoggedIn ? (
+        <AuthPopup />  // Show AuthPopup if user is not logged in
       ) : (
-        <PromptPopup purchasePrice={purchasePrice} />
+        popupType === PopupState.Idle ? (
+          <IdlePopup />
+        ) : (
+          <PromptPopup purchasePrice={purchasePrice} />
+        )
       )}
     </div>
   );

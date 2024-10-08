@@ -24,7 +24,7 @@ export default function AuthPopup() {
     try {
       // Firebase Authentication with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      console.log('User logged in:', userCredential.user)
+      console.log('Login succesfull:', userCredential.user)
       // Here you would typically redirect the user or update the UI
     } catch (err) {
       setError("Invalid email or password. Please try again.")
