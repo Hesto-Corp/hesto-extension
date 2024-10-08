@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import PromptPopup from '@/components/PromptPopup';
 import AuthPopup from '@/components/AuthPopup';
 import IdlePopup from '@/components/IdlePopup';
+import LoadingScreen from '@/components/LoadingScreen';
 
 import { PopupState } from './scripts/utils/stateManagement';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -12,21 +13,23 @@ const App = () => {
   const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track user login state
+  const [checkingAuth, setCheckingAuth] = useState(true); // Add checkingAuth state to handle initial check
 
   // Firebase Authentication Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("On auth changed called!!!!");
+      console.log("On auth state changed called!");
       if (user) {
         console.log("User is logged in: ", user);
-        // User is logged in, update local storage and state
         chrome.storage.local.set({ isLoggedIn: true });
         setIsLoggedIn(true);
       } else {
-        // User is logged out, update local storage and state
+        console.log("User is logged out");
         chrome.storage.local.set({ isLoggedIn: false });
         setIsLoggedIn(false);
       }
+      // After checking auth, set checkingAuth to false
+      setCheckingAuth(false);
     });
 
     return () => unsubscribe(); // Cleanup listener on component unmount
@@ -34,7 +37,6 @@ const App = () => {
 
   // Listen to changes in Chrome storage for popup state
   useEffect(() => {
-    // Function to handle storage changes
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
       if (areaName === 'local' && changes.popupData) {
         const newPopupData = changes.popupData.newValue;
@@ -78,6 +80,10 @@ const App = () => {
   }, []); // Empty dependency array ensures this runs only once (on mount)
 
   // Render logic based on login state and popup type
+  if (checkingAuth) {
+    return <LoadingScreen/>;
+  }
+
   return (
     <div>
       {!isLoggedIn ? (
