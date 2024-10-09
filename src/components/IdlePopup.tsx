@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+// import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from "@/components/ui/card"
 import { User, ExternalLink, ShieldCheck, LogOut } from 'lucide-react'
@@ -9,14 +9,7 @@ import { Button } from "@/components/ui/button"
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase.config'
 
-export default function IdlePopup() {
-  const [userName, setUserName] = useState<string>('Alice')
-
-  useEffect(() => {
-    // Simulating getting the user name
-    setUserName('Alice')
-  }, [])
-
+export default function IdlePopup({ userName }: { userName: string | null }) {
   const handleSignOut = async () => {
     try {
       await signOut(auth)
@@ -35,7 +28,7 @@ export default function IdlePopup() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <User className="h-3 w-3" />
-            <span>Hey, {userName}!</span>
+            <span>Hey, {userName ? userName.split(' ')[0] : userName}!</span>
           </div>
           <a
             href="https://hesto.io"
