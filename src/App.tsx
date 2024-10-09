@@ -6,30 +6,64 @@ import IdlePopup from '@/components/IdlePopup';
 import LoadingScreen from '@/components/LoadingScreen';
 
 import { PopupState } from './scripts/utils/stateManagement';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase.config'; // Import your Firebase auth config
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, db } from './firebase.config'; // Import your Firebase auth config
+import { getDoc, doc } from 'firebase/firestore';
 
 const App = () => {
   const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
   const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track user login state
   const [checkingAuth, setCheckingAuth] = useState(true); // Add checkingAuth state to handle initial check
+  const [userName, setUserName] = useState<string | null>(null);
 
   // Firebase Authentication Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("On auth state changed called!");
+
       if (user) {
         console.log("User is logged in: ", user);
-        chrome.storage.local.set({ isLoggedIn: true });
-        setIsLoggedIn(true);
+
+        // Fetch user data and wait until it's resolved before proceeding
+        const fetchUserData = async () => {
+          try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              if (userData?.name) {
+                setUserName(userData.name);
+                setIsLoggedIn(true); // Allow login
+                chrome.storage.local.set({ isLoggedIn: true });
+              } else {
+                throw new Error("Name field is missing");
+              }
+            } else {
+              throw new Error("User document does not exist");
+            }
+          } catch (error) {
+            console.error("Error fetching user data or name field missing:", error);
+
+            // Forcefully sign the user out if the document or name field is missing
+            await signOut(auth);
+            chrome.storage.local.set({ isLoggedIn: false });
+            setIsLoggedIn(false);
+            setUserName(null);
+            alert("User account is incomplete. Please contact support.");
+          } finally {
+            // Only set checkingAuth to false after fetching user data or handling error
+            setCheckingAuth(false);
+          }
+        };
+
+        fetchUserData();
       } else {
         console.log("User is logged out");
         chrome.storage.local.set({ isLoggedIn: false });
         setIsLoggedIn(false);
+        setUserName(null);
+        setCheckingAuth(false); // No need to fetch data if not logged in
       }
-      // After checking auth, set checkingAuth to false
-      setCheckingAuth(false);
     });
 
     return () => unsubscribe(); // Cleanup listener on component unmount
@@ -80,8 +114,9 @@ const App = () => {
   }, []); // Empty dependency array ensures this runs only once (on mount)
 
   // Render logic based on login state and popup type
-  if (checkingAuth) {
-    return <LoadingScreen/>;
+  if (checkingAuth || (isLoggedIn && userName === null)) {
+    // Render LoadingScreen while checking authentication or fetching username
+    return <LoadingScreen />;
   }
 
   return (
@@ -90,9 +125,9 @@ const App = () => {
         <AuthPopup />  // Show AuthPopup if user is not logged in
       ) : (
         popupType === PopupState.Idle ? (
-          <IdlePopup />
+          <IdlePopup userName={userName} />
         ) : (
-          <PromptPopup purchasePrice={purchasePrice} />
+          <PromptPopup purchasePrice={purchasePrice} userName={userName} />
         )
       )}
     </div>

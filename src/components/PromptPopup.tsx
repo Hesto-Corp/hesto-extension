@@ -11,11 +11,10 @@ interface PromptPopupProps {
   purchasePrice: number | null;
 }
 
-export default function PromptPopup({ purchasePrice }: PromptPopupProps) {
+export default function PromptPopup({ purchasePrice, userName }: PromptPopupProps & { userName: string | null}) {
   const [purchaseAmount, setPurchaseAmount] = useState<number | null>(null);
   const [investmentGrowth, setInvestmentGrowth] = useState<number | null>(null);
   const [decision, setDecision] = useState<'invest' | null>(null);
-  const [userName, setUserName] = useState<string>('');
   const [totalInvested, setTotalInvested] = useState<number>(2571.92);
   const [showConfetti, setShowConfetti] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -24,7 +23,6 @@ export default function PromptPopup({ purchasePrice }: PromptPopupProps) {
     if (purchasePrice) {
       setPurchaseAmount(purchasePrice);
     }
-    setUserName('Alice');
   }, [purchasePrice]);
 
   useEffect(() => {
@@ -77,7 +75,7 @@ export default function PromptPopup({ purchasePrice }: PromptPopupProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <User className="h-3 w-3" />
-            <span>Hey, {userName}!</span>
+            <span>Hey, {userName ? userName.split(' ')[0] : userName}!</span>
           </div>
           <a
             href="https://hesto.io"
@@ -204,7 +202,7 @@ export default function PromptPopup({ purchasePrice }: PromptPopupProps) {
                 transition={{ delay: 0.2 }}
                 className="text-base font-bold text-white mb-1"
               >
-                Fantastic choice, {userName}!
+                Fantastic choice, {userName ? userName.split(' ')[0] : userName}!
               </motion.p>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
