@@ -14,7 +14,6 @@ export default function IdlePopup({ userName }: { userName: string | null }) {
     try {
       await signOut(auth)
       console.log('User signed out successfully')
-      // You might want to add additional logic here, such as redirecting the user or updating the UI
     } catch (error) {
       console.error('Error signing out:', error)
     }
