@@ -1,10 +1,13 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent} from "@/components/ui/card"
-import { User, ExternalLink, ShieldCheck } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
+import { User, ExternalLink, ShieldCheck, LogOut } from 'lucide-react'
 import { PromptHeader } from './Header'
+import { Button } from "@/components/ui/button"
+import { signOut } from 'firebase/auth'
+import { auth } from '../firebase.config'
 
 export default function IdlePopup() {
   const [userName, setUserName] = useState<string>('Alice')
@@ -14,12 +17,21 @@ export default function IdlePopup() {
     setUserName('Alice')
   }, [])
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth)
+      console.log('User signed out successfully')
+      // You might want to add additional logic here, such as redirecting the user or updating the UI
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
   return (
     <Card className="w-[350px] min-h-[300px] max-h-[600px] rounded-none shadow-none flex flex-col">
       <PromptHeader />
 
       <CardContent className="flex-grow p-3 space-y-3 overflow-y-auto">
-
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <User className="h-3 w-3" />
@@ -59,6 +71,15 @@ export default function IdlePopup() {
             Investing your daily latte money for a year could buy you 52 lattes plus a fancy coffee machine!
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSignOut}
+          className="w-full text-emerald-700 hover:text-emerald-800 border-emerald-200 hover:bg-emerald-50"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
       </CardContent>
     </Card>
   )
