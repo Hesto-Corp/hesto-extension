@@ -126,10 +126,4 @@ const App = () => {
   );
 };
 
-// Cases:
-// 1. Not Logged In:
-//  a. AppState.Idle: Login Screen
-//  b. AppState.Detected: Login Screen with Prompt
-// 2. Logged In:
-//  a. App.
 export default App;
