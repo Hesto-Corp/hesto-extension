@@ -9,23 +9,28 @@ import { PromptHeader } from './Header'
 
 import { doc, getDoc } from 'firebase/firestore'; // Firestore imports
 import { auth, db } from '../firebase.config'; // Assu
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 
-export default function AuthPopup({ onLoginSuccess }: { onLoginSuccess: (userName: string) => void }) {
+import { AuthState } from '../types/auth';
+import { UserInformation } from '../types/user';
+
+// export default function AuthPopup({ onLoginSuccess }: { onLoginSuccess: (userName: string) => void }) {
+export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState, userInfo: UserInformation) => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
     try {
       // Firebase Authentication with email and password
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('Login succesfull:', user);
+      console.log('Login successful:', user);
 
       // Fetch the user's name from Firestore
       const userDocRef = doc(db, 'users', user.uid); // Reference to the user's document
@@ -34,18 +39,45 @@ export default function AuthPopup({ onLoginSuccess }: { onLoginSuccess: (userNam
       if (userDoc.exists()) {
         const userData = userDoc.data();
         const userName = userData?.name || 'Unknown User'; // Get the user's name or set a fallback
-        onLoginSuccess(userName); // Pass the user's name to onLoginSuccess
+
+        // Call onLogin in the parent component with the authState and userInfo
+        onLogin({
+          isLoggedIn: true,
+          token: await user.getIdToken(),
+          uid: user.uid,
+          pending: false,
+          error: null,
+        }, {
+          uid: user.uid,
+          name: userName,
+          email: user.email,
+        });
       } else {
-        console.log('No such user document!');
-        onLoginSuccess('Unknown User');
+        console.log('No such user document! Logging out...');
+
+        // Log the user out and clear authState and userInfo
+        await signOut(auth);
+        onLogin({
+          isLoggedIn: false,
+          token: null,
+          uid: null,
+          pending: false,
+          error: 'User document not found.',
+        }, {
+          uid: null,
+          name: null,
+          email: null,
+        });
+
+        setError('Account setup is incomplete. Please contact support.'); // This is a fucked up state that should NEVER happen!
       }
     } catch (err) {
-      setError("Invalid email or password. Please try again.")
-      console.error(err)
+      setError("Invalid email or password. Please try again.");
+      console.error(err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="w-[350px] min-h-[300px] max-h-[600px] rounded-none shadow-none flex flex-col">
