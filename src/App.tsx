@@ -20,7 +20,7 @@ const useChromeStorage = () => {
         // If appState changed in the storage
         if (changes.appState) {
           const newAppState = changes.appState.newValue;
-          
+
           // Set the appState if it exists
           if (newAppState?.state !== undefined) {
             setAppState(newAppState.state); // Assuming you have setAppState for updating appState
@@ -112,14 +112,24 @@ const App = () => {
   return (
     <div>
       {!authState.isLoggedIn ? (
-        <AuthPopup onLogin={handleLogin} />
+        appState === AppState.Detected ? (
+          <AuthPopup onLogin={handleLogin} detected={true} />
+        ) : (
+          <AuthPopup onLogin={handleLogin} />
+        )
       ) : appState === AppState.Idle ? (
-        <IdlePopup userName={userInfo.name} />
+        <IdlePopup userName={userInfo?.name ?? null} />
       ) : (
-        <PromptPopup purchasePrice={productData?.price ?? null} userName={userInfo.name} />
+        <PromptPopup purchasePrice={productData?.price ?? null} userName={userInfo?.name ?? null} />
       )}
     </div>
   );
 };
 
+// Cases:
+// 1. Not Logged In:
+//  a. AppState.Idle: Login Screen
+//  b. AppState.Detected: Login Screen with Prompt
+// 2. Logged In:
+//  a. App.
 export default App;
