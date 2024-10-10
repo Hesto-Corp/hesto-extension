@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Lock, Mail, AlertCircle, Loader2 } from 'lucide-react'
 import { PromptHeader } from './Header'
 
-// Auth
-import { auth } from '../firebase.config'
+import { doc, getDoc } from 'firebase/firestore'; // Firestore imports
+import { auth, db } from '../firebase.config'; // Assu
 import { signInWithEmailAndPassword } from "firebase/auth"
 
-export default function AuthPopup() {
+export default function AuthPopup({ onLoginSuccess }: { onLoginSuccess: (userName: string) => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -24,8 +24,21 @@ export default function AuthPopup() {
     try {
       // Firebase Authentication with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      console.log('Login succesfull:', userCredential.user)
-      // Here you would typically redirect the user or update the UI
+      const user = userCredential.user;
+      console.log('Login succesfull:', user);
+
+      // Fetch the user's name from Firestore
+      const userDocRef = doc(db, 'users', user.uid); // Reference to the user's document
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const userName = userData?.name || 'Unknown User'; // Get the user's name or set a fallback
+        onLoginSuccess(userName); // Pass the user's name to onLoginSuccess
+      } else {
+        console.log('No such user document!');
+        onLoginSuccess('Unknown User');
+      }
     } catch (err) {
       setError("Invalid email or password. Please try again.")
       console.error(err)

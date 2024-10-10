@@ -2,63 +2,8 @@ import { useEffect, useState } from 'react';
 import PromptPopup from '@/components/PromptPopup';
 import AuthPopup from '@/components/AuthPopup';
 import IdlePopup from '@/components/IdlePopup';
-import LoadingScreen from '@/components/LoadingScreen';
 import { PopupState } from './scripts/utils/stateManagement';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { auth, db } from './firebase.config';
-import { getDoc, doc } from 'firebase/firestore';
-
-// Custom hook for Firebase authentication and user state
-const useFirebaseAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  const fetchUserData = async (userUid: string) => {
-    const userDoc = await getDoc(doc(db, 'users', userUid));
-    if (!userDoc.exists()) throw new Error('User document does not exist');
-    const userData = userDoc.data();
-    if (!userData?.name) throw new Error('Name field is missing');
-    return userData.name;
-  };
-
-  const handleAuthStateChanged = async (user: User | null) => {
-    if (user) {
-      try {
-        const userName = await fetchUserData(user.uid);
-        setUserName(userName);
-        setIsLoggedIn(true);
-        updateChromeStorage(true);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        await handleUserSignOut();
-      } finally {
-        setCheckingAuth(false);
-      }
-    } else {
-      await handleUserSignOut();
-      setCheckingAuth(false);
-    }
-  };
-
-  const handleUserSignOut = async () => {
-    await signOut(auth);
-    setIsLoggedIn(false);
-    setUserName(null);
-    await updateChromeStorage(false);
-  };
-
-  const updateChromeStorage = async (isLoggedIn: boolean) => {
-    await chrome.storage.local.set({ isLoggedIn });
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, handleAuthStateChanged);
-    return () => unsubscribe();
-  }, []);
-
-  return { isLoggedIn, userName, checkingAuth };
-};
+// import LoadingScreen from '@/components/LoadingScreen';
 
 // Custom hook for managing Chrome storage state
 const useChromeStorage = () => {
@@ -76,7 +21,6 @@ const useChromeStorage = () => {
   };
 
   useEffect(() => {
-    // Initial read from Chrome storage
     chrome.storage.local.get(['popupData'], (result) => {
       const initialData = result.popupData;
       if (initialData) {
@@ -86,7 +30,6 @@ const useChromeStorage = () => {
       chrome.runtime.connect({ name: 'popup_lifecycle' });
     });
 
-    // Listen for storage changes
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
@@ -97,18 +40,60 @@ const useChromeStorage = () => {
 };
 
 const App = () => {
-  const { isLoggedIn, userName, checkingAuth } = useFirebaseAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  // const [checkingAuth, setCheckingAuth] = useState(true);
   const { popupType, purchasePrice } = useChromeStorage();
 
+  // Function to handle successful login
+  const handleLoginSuccess = (userName: string) => {
+    // Save login state and userName in Chrome storage for persistence
+    chrome.storage.local.set({ isLoggedIn: true, userName });
+    setIsLoggedIn(true);
+    setUserName(userName);
+  };
+
+  // Effect to read initial auth state from Chrome storage
+  useEffect(() => {
+    chrome.storage.local.get(['isLoggedIn', 'userName'], (result) => {
+      setIsLoggedIn(result.isLoggedIn ?? false);
+      setUserName(result.userName ?? null);
+      // setCheckingAuth(false);
+    });
+
+    // Callback for changes in Chrome storage
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.isLoggedIn) {
+        setIsLoggedIn(changes.isLoggedIn.newValue);
+      }
+      if (changes.userName) {
+        setUserName(changes.userName.newValue);
+      }
+    });
+
+    // Cleanup listener
+    return () => {
+      chrome.storage.onChanged.removeListener((changes) => {
+        if (changes.isLoggedIn) {
+          setIsLoggedIn(changes.isLoggedIn.newValue);
+        }
+        if (changes.userName) {
+          setUserName(changes.userName.newValue);
+        }
+      });
+    };
+  }, []);
+
   // Render logic based on login state and popup type
-  if (checkingAuth || (isLoggedIn && !userName)) {
-    return <LoadingScreen />;
-  }
+  // if (checkingAuth || (isLoggedIn && !userName)) {
+  //   console.log("Checking Auth: {}  userName: {}", checkingAuth, userName);
+  //   return <LoadingScreen />;
+  // }
 
   return (
     <div>
       {!isLoggedIn ? (
-        <AuthPopup />  // Show AuthPopup if user is not logged in
+        <AuthPopup onLoginSuccess={handleLoginSuccess} /> // Pass handleLoginSuccess to AuthPopup
       ) : (
         popupType === PopupState.Idle ? (
           <IdlePopup userName={userName} />
