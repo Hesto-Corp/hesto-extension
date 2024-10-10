@@ -6,16 +6,16 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Lock, Mail, AlertCircle, Loader2 } from 'lucide-react'
 import { PromptHeader } from './Header'
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-import { doc, getDoc } from 'firebase/firestore'; // Firestore imports
-import { auth, db } from '../firebase.config'; // Assu
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase.config'
+import { signInWithEmailAndPassword, signOut } from "firebase/auth"
 
-import { AuthState } from '../types/auth';
-import { UserInformation } from '../types/user';
+import { AuthState } from '../types/auth'
+import { UserInformation } from '../types/user'
 
-// export default function AuthPopup({ onLoginSuccess }: { onLoginSuccess: (userName: string) => void }) {
-export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState, userInfo: UserInformation) => void }) {
+export default function AuthPopup({ onLogin, detected = false }: { onLogin: (authState: AuthState, userInfo: UserInformation) => void, detected?: boolean }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -27,20 +27,17 @@ export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState,
     setIsLoading(true);
 
     try {
-      // Firebase Authentication with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('Login successful:', user);
 
-      // Fetch the user's name from Firestore
-      const userDocRef = doc(db, 'users', user.uid); // Reference to the user's document
+      const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const userName = userData?.name || 'Unknown User'; // Get the user's name or set a fallback
+        const userName = userData?.name || 'Unknown User';
 
-        // Call onLogin in the parent component with the authState and userInfo
         onLogin({
           isLoggedIn: true,
           token: await user.getIdToken(),
@@ -55,7 +52,6 @@ export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState,
       } else {
         console.log('No such user document! Logging out...');
 
-        // Log the user out and clear authState and userInfo
         await signOut(auth);
         onLogin({
           isLoggedIn: false,
@@ -69,7 +65,7 @@ export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState,
           email: null,
         });
 
-        setError('Account setup is incomplete. Please contact support.'); // This is a fucked up state that should NEVER happen!
+        setError('Account setup is incomplete. Please contact support.');
       }
     } catch (err) {
       setError("Invalid email or password. Please try again.");
@@ -84,9 +80,19 @@ export default function AuthPopup({ onLogin }: { onLogin: (authState: AuthState,
       <PromptHeader />
 
       <CardContent className="flex-grow p-4 flex flex-col justify-center">
-        <p className="text-center text-sm text-emerald-700 font-medium mb-4">
-          Let's make smart financial decisions together.
-        </p>
+        {detected ? (
+          <Alert className="mb-4 bg-emerald-50 border-emerald-200">
+            <AlertDescription className="text-center font-medium">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-green-500 animate-pulse">
+                Oops! Impulse alert! 🚨 Log in to unleash your financial superhero! 💪
+              </span>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <p className="text-center text-sm font-medium mb-4 text-emerald-700">
+            Let's make smart financial decisions together.
+          </p>
+        )}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
             <div className="flex items-center">
