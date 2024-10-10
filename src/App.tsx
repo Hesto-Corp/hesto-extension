@@ -3,7 +3,8 @@ import PromptPopup from '@/components/PromptPopup';
 import AuthPopup from '@/components/AuthPopup';
 import IdlePopup from '@/components/IdlePopup';
 
-import { AppState, ProductData } from './scripts/utils/stateManagement';
+import { AppState } from './types/appState';
+import { ProductData } from './types/product';
 
 import { AuthState } from './types/auth';
 import { UserInformation } from './types/user';

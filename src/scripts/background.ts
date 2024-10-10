@@ -1,4 +1,4 @@
-import { clearTriggerPopup } from './utils/stateManagement'
+import { clearTriggerPopup } from '../helpers/triggerPopup'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth, db } from '../firebase.config';
 import { getDoc, doc } from 'firebase/firestore';

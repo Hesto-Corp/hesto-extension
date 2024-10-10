@@ -1,6 +1,7 @@
-import { addDimOverlay, removeDimOverlay } from './utils/overlay'
-import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
-import { setProductData, triggerPopup } from './utils/stateManagement'
+import { addDimOverlay, removeDimOverlay } from '../helpers/overlay'
+import { findPriceNearby, detectPurchaseIntent } from '../helpers/parsing'
+import { triggerPopup } from '../helpers/triggerPopup'
+import { setProductData } from '../types/product'
 
 // Event listener for click events to detect purchasing intent
 document.addEventListener('click', (event) => {
