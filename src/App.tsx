@@ -4,6 +4,9 @@ import AuthPopup from '@/components/AuthPopup';
 import IdlePopup from '@/components/IdlePopup';
 import { PopupState } from './scripts/utils/stateManagement';
 
+import { AuthState } from './types/auth';
+import { UserInformation } from './types/user';
+
 // Custom hook for managing Chrome storage state
 const useChromeStorage = () => {
   const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
@@ -44,18 +47,29 @@ const useChromeStorage = () => {
 
 // Custom hook for managing authentication state
 const useAuthState = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
+  const [authState, setAuthState] = useState<AuthState>({
+    isLoggedIn: false,
+    token: null,
+    uid: null,
+    pending: false,
+    error: null,
+  });
+
+  const [userInfo, setUserInfo] = useState<UserInformation>({
+    uid: null,
+    name: null,
+    email: null,
+  });
 
   useEffect(() => {
-    chrome.storage.local.get(['isLoggedIn', 'userName'], (result) => {
-      setIsLoggedIn(result.isLoggedIn ?? false);
-      setUserName(result.userName ?? null);
+    chrome.storage.local.get(['authState', 'userInfo'], (result) => {
+      if (result.authState) setAuthState(result.authState);
+      if (result.userInfo) setUserInfo(result.userInfo);
     });
 
     const handleAuthChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      if (changes.isLoggedIn) setIsLoggedIn(changes.isLoggedIn.newValue);
-      if (changes.userName) setUserName(changes.userName.newValue);
+      if (changes.authState) setAuthState(changes.authState.newValue);
+      if (changes.userInfo) setUserInfo(changes.userInfo.newValue);
     };
 
     chrome.storage.onChanged.addListener(handleAuthChange);
@@ -65,27 +79,27 @@ const useAuthState = () => {
     };
   }, []);
 
-  const handleLoginSuccess = (userName: string) => {
-    chrome.storage.local.set({ isLoggedIn: true, userName });
-    setIsLoggedIn(true);
-    setUserName(userName);
+  const handleLogin = (newAuthState: AuthState, newUserInfo: UserInformation) => {
+    chrome.storage.local.set({ authState: newAuthState, userInfo: newUserInfo });
+    setAuthState(newAuthState);
+    setUserInfo(newUserInfo);
   };
 
-  return { isLoggedIn, userName, handleLoginSuccess };
+  return { authState, userInfo, handleLogin };
 };
 
 const App = () => {
   const { popupType, purchasePrice } = useChromeStorage();
-  const { isLoggedIn, userName, handleLoginSuccess } = useAuthState();
+  const { authState, userInfo, handleLogin } = useAuthState();
 
   return (
     <div>
-      {!isLoggedIn ? (
-        <AuthPopup onLoginSuccess={handleLoginSuccess} />
+      {!authState.isLoggedIn ? (
+        <AuthPopup onLogin={handleLogin} />
       ) : popupType === PopupState.Idle ? (
-        <IdlePopup userName={userName} />
+        <IdlePopup userName={userInfo.name} />
       ) : (
-        <PromptPopup purchasePrice={purchasePrice} userName={userName} />
+        <PromptPopup purchasePrice={purchasePrice} userName={userInfo.name} />
       )}
     </div>
   );

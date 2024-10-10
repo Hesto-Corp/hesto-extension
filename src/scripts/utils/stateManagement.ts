@@ -17,7 +17,7 @@ export enum PopupState {
   Detected,
 }
 
-export interface Product{
+export interface Product {
   name: string | null
   price: number | null
   currency: string | null
