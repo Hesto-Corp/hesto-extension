@@ -2,36 +2,51 @@ import { useEffect, useState, useCallback } from 'react';
 import PromptPopup from '@/components/PromptPopup';
 import AuthPopup from '@/components/AuthPopup';
 import IdlePopup from '@/components/IdlePopup';
-import { PopupState } from './scripts/utils/stateManagement';
+
+import { AppState, ProductData } from './scripts/utils/stateManagement';
 
 import { AuthState } from './types/auth';
 import { UserInformation } from './types/user';
 
 // Custom hook for managing Chrome storage state
 const useChromeStorage = () => {
-  const [popupType, setPopupType] = useState<PopupState>(PopupState.Idle);
-  const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
+  const [appState, setAppState] = useState<AppState>(AppState.Idle);
+  const [productData, setProductData] = useState<ProductData | null>(null);
 
   const handleStorageChange = useCallback(
     (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.popupData) {
-        const newPopupData = changes.popupData.newValue;
-        if (newPopupData?.state !== undefined) setPopupType(newPopupData.state);
-        if (newPopupData?.state === PopupState.Detected && newPopupData?.product?.price) {
-          setPurchasePrice(newPopupData.product.price);
+      if (areaName === 'local') {
+        // If appState changed in the storage
+        if (changes.appState) {
+          const newAppState = changes.appState.newValue;
+          
+          // Set the appState if it exists
+          if (newAppState?.state !== undefined) {
+            setAppState(newAppState.state); // Assuming you have setAppState for updating appState
+          }
+
+          // Retrieve productData from Chrome storage
+          chrome.storage.local.get('productData', (result) => {
+            const productData = result.productData;
+            setProductData(productData); // Set product data 
+          });
         }
       }
     },
-    []
+    [] // No dependencies, since it's a callback
   );
 
+
+
   useEffect(() => {
-    chrome.storage.local.get(['popupData'], (result) => {
-      const initialData = result.popupData;
-      if (initialData) {
-        setPopupType(initialData.state ?? PopupState.Idle);
-        setPurchasePrice(initialData?.product?.price ?? null);
-      }
+    chrome.storage.local.get(['appState', 'productData'], (result) => {
+      // Extract appState and productData from the storage result
+      const { appState, productData } = result;
+
+      if (appState) setAppState(appState || AppState.Idle);
+      if (productData) setProductData(productData || null); // Assuming you're setting product price here
+
+      // Connect to the popup lifecycle after initialization
       chrome.runtime.connect({ name: 'popup_lifecycle' });
     });
 
@@ -42,7 +57,8 @@ const useChromeStorage = () => {
     };
   }, [handleStorageChange]);
 
-  return { popupType, purchasePrice };
+
+  return { appState, productData };
 };
 
 // Custom hook for managing authentication state
@@ -89,17 +105,17 @@ const useAuthState = () => {
 };
 
 const App = () => {
-  const { popupType, purchasePrice } = useChromeStorage();
+  const { appState, productData } = useChromeStorage();
   const { authState, userInfo, handleLogin } = useAuthState();
 
   return (
     <div>
       {!authState.isLoggedIn ? (
         <AuthPopup onLogin={handleLogin} />
-      ) : popupType === PopupState.Idle ? (
+      ) : appState === AppState.Idle ? (
         <IdlePopup userName={userInfo.name} />
       ) : (
-        <PromptPopup purchasePrice={purchasePrice} userName={userInfo.name} />
+        <PromptPopup purchasePrice={productData?.price ?? null} userName={userInfo.name} />
       )}
     </div>
   );

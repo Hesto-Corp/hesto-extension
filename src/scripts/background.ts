@@ -1,4 +1,4 @@
-import { setToIdle } from './utils/stateManagement'
+import { clearTriggerPopup } from './utils/stateManagement'
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { auth, db } from '../firebase.config';
 import { getDoc, doc } from 'firebase/firestore';
@@ -27,7 +27,7 @@ chrome.runtime.onConnect.addListener((port) => {
       }
     });
 
-    setToIdle();
+    clearTriggerPopup();
   });
 });
 
@@ -52,22 +52,6 @@ const fetchUserData = async (userUid: string): Promise<UserInformation> => {
     email: userData.email || null
   };
 };
-
-// Start listening for auth changes
-// onAuthStateChanged(auth, async (user: User | null) => {
-//   if (user) {
-//     try {
-//       const userName = await fetchUserData(user.uid);
-//       chrome.storage.local.set({ isLoggedIn: true, userName });  // Set authPending to false after completion
-//     } catch (error) {
-//       console.error('Error fetching user data:', error);
-//       await signOut(auth);
-//       chrome.storage.local.set({ isLoggedIn: false, userName: null });  // Set authPending to false after completion
-//     }
-//   } else {
-//     chrome.storage.local.set({ isLoggedIn: false, userName: null });  // Set authPending to false after completion
-//   }
-// });
 
 
 
@@ -172,11 +156,6 @@ onAuthStateChanged(auth, async (user: User | null) => {
     setAuthStateInStorage(loggedOutAuthState, null);
   }
 });
-
-
-
-
-
 
 
 // How auth storage works

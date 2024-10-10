@@ -1,8 +1,6 @@
 import { addDimOverlay, removeDimOverlay } from './utils/overlay'
 import { findPriceNearby, detectPurchaseIntent } from './tracking/extractInformation'
-import { safeSendMessage } from './utils/messaging'
-import { savePopupDataToStorage } from './utils/stateManagement'
-
+import { setProductData, triggerPopup } from './utils/stateManagement'
 
 // Event listener for click events to detect purchasing intent
 document.addEventListener('click', (event) => {
@@ -25,12 +23,12 @@ document.addEventListener('click', (event) => {
     }
 
     // Send message to open the popup
-    savePopupDataToStorage({
-      state: 1,
-      product: { name: 'Example Product', price, currency: 'USD' }
+    setProductData({
+      name: 'Example Product',
+      price: price,
+      currency: 'USD',
     });
-
-    safeSendMessage({ action: 'trigger_popup'}); // Trigger the Popup.
+    triggerPopup();
     addDimOverlay();
 
   } else {
