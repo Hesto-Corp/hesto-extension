@@ -120,6 +120,7 @@ const App = () => {
       ) : appState === AppState.Idle ? (
         <IdlePopup userName={userInfo?.name ?? null} />
       ) : (
+        // TODO: Handle Null Price
         <PromptPopup purchasePrice={productData?.price ?? null} userName={userInfo?.name ?? null} />
       )}
     </div>

@@ -1,3 +1,4 @@
+import { ProductData } from '@/types/product'
 /**
  * Recursively extracts text from an element and its children.
  * 
@@ -67,57 +68,112 @@ export function detectPurchaseIntent(actionableElement: HTMLElement): boolean {
 }
 
 
-/**
- * Finds the price element near the given actionable element.
- * 
- * This function searches for an element containing a price value near the provided actionable element.
- * It starts by examining the siblings of the actionable element and moves up through its ancestors.
- * It specifically looks for elements whose class or ID contains terms like 'price' or 'cost' to find potential price values.
- * 
- * @param {HTMLElement} actionableElement - The HTML element that triggered the action (e.g., a button clicked by the user).
- * @returns {number | null} The extracted price as a number, or null if no valid price is found.
- * 
- * The function follows these steps:
- * 1. Starts by examining siblings and parent elements of the actionable element.
- * 2. Searches for elements such as `<span>`, `<div>`, or `<p>` that may contain price information.
- * 3. Checks if the `className` or `id` of an element contains keywords like 'price' or 'cost'.
- * 4. Extracts and cleans the text content to derive a numeric price value.
- */
 export function findPriceNearby(actionableElement: HTMLElement): number | null {
   let price: string = '';
 
-  // Start by looking at siblings of the actionable element
+  // Keywords to identify potential price-related elements
+  const priceKeywords = ['price', 'cost', 'amount', 'total', 'value', 'sale'];
+
+  // Regex to identify common price patterns (e.g., "$123.45", "123.45 USD")
+  const priceRegex = /[$€£¥₹]?\s?(\d{1,3}(,\d{3})*(\.\d{2})?)/;
+
+  // Start by looking at siblings and parent elements
   let parent = actionableElement.parentElement;
   while (parent && !price) {
-    // Search for potential price elements in siblings or parent
-    const potentialPriceElements = parent.querySelectorAll('span, div, p');
+    const potentialPriceElements = parent.querySelectorAll('span, div, p, li, strong');
+
     potentialPriceElements.forEach((el) => {
       if (el instanceof HTMLElement) {
-        if (
-          el.className.toLowerCase().includes('price') ||
-          el.className.toLowerCase().includes('cost') ||
-          el.id.toLowerCase().includes('price') ||
-          el.id.toLowerCase().includes('cost')
-        ) {
-          price = getDeepText(el);
+        const textContent = getDeepText(el);
+
+        // Check if the element has price-related keywords in class or id
+        const classOrId = (el.className + el.id).toLowerCase();
+        if (priceKeywords.some(keyword => classOrId.includes(keyword))) {
+          price = textContent;
+        }
+
+        // If no match via class or id, try to find price using regex
+        const match = textContent.match(priceRegex);
+        if (match && !price) {
+          price = match[0];
         }
       }
     });
 
-    // Move up one level to continue the search
+    // Move up one level to continue the search if no price is found
     parent = parent.parentElement;
   }
 
   if (price) {
-    // Remove any non-numeric characters except for decimal points
+    // Clean up the price text to extract the numeric value
     const cleanedPrice = price.replace(/[^0-9.]/g, '');
 
     // Convert to a number
     const numericPrice = parseFloat(cleanedPrice);
 
-    // If the result is a valid number, return it, otherwise return null
+    // Return the numeric price if valid, otherwise return null
     return isNaN(numericPrice) ? null : numericPrice;
   }
 
   return null;
+}
+
+// Function to extract JSON-LD structured data (schema.org)
+export function extractJSONLD(): ProductData | null {
+  const scriptTags = document.querySelectorAll('script[type="application/ld+json"]');
+  let productData: ProductData | null = null;
+
+  // Use a regular for loop so we can break early
+  for (let i = 0; i < scriptTags.length; i++) {
+    const script = scriptTags[i];
+    const jsonText = script.textContent; // textContent can be null
+    if (jsonText) {
+      try {
+        const jsonData = JSON.parse(jsonText);
+
+        // Check if the JSON data is of type Product
+        if (jsonData['@type'] === 'Product') {
+          productData = {
+            name: jsonData.name || null,
+            price: jsonData.offers?.price || null,
+            currency: jsonData.offers?.priceCurrency || null,
+            availability: jsonData.offers?.availability || null,
+            image: jsonData.image || null,
+            description: jsonData.description || null,
+            url: window.location.href || null  // Add current page URL
+          };
+          break; // Exit loop once the product data is found
+        }
+      } catch (error) {
+        console.error("Error parsing JSON-LD:", error);
+      }
+    }
+  }
+
+  return productData;
+}
+
+export function extractProductData(): ProductData {
+
+  let productData: ProductData = {
+    name: null,
+    price: null,
+    currency: null,
+    url: null,
+    image: null,
+    description: null,
+    availability: null
+  }
+
+  const extractedData = extractJSONLD();
+  if (extractedData !== null) {
+    console.log('Extracted Product:', productData);
+    productData = extractedData;
+  } else {
+    // Do other techniques
+    console.log('No product data found.');
+    // findPriceNearby, etc
+  }
+
+  return productData;
 }

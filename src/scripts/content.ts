@@ -1,5 +1,5 @@
 import { addDimOverlay, removeDimOverlay } from '../helpers/overlay'
-import { findPriceNearby, detectPurchaseIntent } from '../helpers/parsing'
+import { detectPurchaseIntent, extractProductData } from '../helpers/parsing'
 import { triggerPopup } from '../helpers/triggerPopup'
 import { setProductData } from '../types/product'
 
@@ -15,20 +15,11 @@ document.addEventListener('click', (event) => {
   if (actionableElement && detectPurchaseIntent(actionableElement)) {
     console.log('Detected purchasing intent based on actionable element:', actionableElement);
 
-    // Find the price nearby
-    const price = findPriceNearby(actionableElement);
-    if (price) {
-      console.log('Detected price near actionable element:', price);
-    } else {
-      console.log('No price found near the actionable element.');
-    }
+    // TODO: Handle Null case, just don't do any detection in that case!
+    const product_data = extractProductData()
+    console.log("Product Data: ", product_data)
+    setProductData(product_data)
 
-    // Send message to open the popup
-    setProductData({
-      name: 'Example Product',
-      price: price,
-      currency: 'USD',
-    });
     triggerPopup();
     addDimOverlay();
 

@@ -10,9 +10,13 @@ export function clearProductData() {
   });
 };
 
+// Remove optionality
 export interface ProductData {
   name: string | null
   price: number | null
   currency: string | null
-  url?: string
+  url: string | null
+  image: string | null
+  description: string | null
+  availability: string | null
 }
