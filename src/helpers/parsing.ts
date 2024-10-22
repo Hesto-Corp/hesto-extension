@@ -133,11 +133,31 @@ export function extractJSONLD(): ProductData | null {
 
         // Check if the JSON data is of type Product
         if (jsonData['@type'] === 'Product') {
+          let price: number | null = null;
+          let currency: string | null = null;
+          let availability: string | null = null;
+
+          // Check if offers is an AggregateOffer or a single Offer
+          if (jsonData.offers) {
+            if (jsonData.offers['@type'] === 'AggregateOffer') {
+              // If it's an AggregateOffer, extract lowPrice or highPrice
+              price = jsonData.offers.lowPrice ? parseFloat(jsonData.offers.lowPrice) : null;
+              currency = jsonData.offers.priceCurrency || null;
+              availability = jsonData.offers.availability || null;
+            } else if (jsonData.offers['@type'] === 'Offer') {
+              // If it's a single Offer
+              price = jsonData.offers.price ? parseFloat(jsonData.offers.price) : null;
+              currency = jsonData.offers.priceCurrency || null;
+              availability = jsonData.offers.availability || null;
+            }
+          }
+
+          // Populate product data
           productData = {
             name: jsonData.name || null,
-            price: jsonData.offers?.price ? parseFloat(jsonData.offers.price) : null, // Convert price to a number
-            currency: jsonData.offers?.priceCurrency || null,
-            availability: jsonData.offers?.availability || null,
+            price: price,
+            currency: currency,
+            availability: availability,
             image: jsonData.image || null,
             description: jsonData.description || null,
             url: window.location.href || null  // Add current page URL
@@ -256,8 +276,8 @@ export function extractProductData(): ProductData {
 
   const extractedData = extractJSONLD();
   if (extractedData !== null) {
-    console.log('Extracted Product:', productData);
     productData = extractedData;
+    console.log('Extracted Product:', productData);
   } else {
     // Do other techniques
     console.log('No product data found.');
