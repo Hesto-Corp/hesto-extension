@@ -10,7 +10,6 @@ export function clearProductData() {
   });
 };
 
-// Remove optionality
 export interface ProductData {
   name: string | null
   price: number | null

@@ -6,13 +6,11 @@ import { DollarSign, ShoppingCart, User, ExternalLink, PiggyBank, Star, X } from
 import { PromptHeader } from './Header'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProductData } from '@/types/product'
+import { writeProductData } from '@/helpers/database'
 
-interface PromptPopupProps {
-  purchasePrice: number | null;
-}
 
-export default function PromptPopup({ purchasePrice, userName }: PromptPopupProps & { userName: string | null}) {
-  const [purchaseAmount, setPurchaseAmount] = useState<number | null>(null);
+export default function PromptPopup({ productData, userName }: { productData: ProductData | null, userName: string | null}) {
   const [investmentGrowth, setInvestmentGrowth] = useState<number | null>(null);
   const [decision, setDecision] = useState<'invest' | null>(null);
   const [totalInvested, setTotalInvested] = useState<number>(2571.92);
@@ -20,17 +18,11 @@ export default function PromptPopup({ purchasePrice, userName }: PromptPopupProp
   const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
-    if (purchasePrice) {
-      setPurchaseAmount(purchasePrice);
-    }
-  }, [purchasePrice]);
-
-  useEffect(() => {
-    if (purchaseAmount) {
-      const growth = purchaseAmount * Math.pow(1.105, 15);
+    if (productData?.price) {
+      const growth = productData.price * Math.pow(1.105, 15);
       setInvestmentGrowth(growth);
     }
-  }, [purchaseAmount]);
+  }, []);
 
   useEffect (()  => {
     let timer: NodeJS.Timeout
@@ -49,9 +41,12 @@ export default function PromptPopup({ purchasePrice, userName }: PromptPopupProp
 
   const handleInvest = () => {
     setDecision('invest');
-    if (purchaseAmount) {
-      setTotalInvested(prevTotal => prevTotal + purchaseAmount);
+
+    if (productData) {
+      setTotalInvested(prevTotal => prevTotal + (productData.price ?? 0));
+      writeProductData(productData);
     }
+
     setShowConfetti(true);
     setCountdown(10)  // This is where the timer is set to 5 seconds
   };
@@ -90,7 +85,7 @@ export default function PromptPopup({ purchasePrice, userName }: PromptPopupProp
           Impulse buy? Let's pause and consider investing instead.
         </p>
         <AnimatePresence>
-          {purchaseAmount && (
+          {productData?.price && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -98,7 +93,7 @@ export default function PromptPopup({ purchasePrice, userName }: PromptPopupProp
               className="flex items-center justify-between bg-white p-2 shadow-sm border border-gray-200"
             >
               <span className="text-xs font-semibold text-gray-800">Purchase Amount:</span>
-              <span className="text-sm font-bold text-gray-900">{formatCurrency(purchaseAmount)}</span>
+              <span className="text-sm font-bold text-gray-900">{formatCurrency(productData.price)}</span>
             </motion.div>
           )}
         </AnimatePresence>

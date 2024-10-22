@@ -17,11 +17,15 @@ document.addEventListener('click', (event) => {
 
     // TODO: Handle Null case, just don't do any detection in that case!
     const product_data = extractProductData()
-    console.log("Product Data: ", product_data)
-    setProductData(product_data)
+    console.log("Extracted Data: ", product_data)
 
-    triggerPopup();
-    addDimOverlay();
+    if (product_data.name && product_data.price && product_data.url) {
+      console.log("Product Data: ", product_data)
+      setProductData(product_data)
+
+      triggerPopup();
+      addDimOverlay();
+    }
 
   } else {
     console.log('No actionable element found for the click.');
