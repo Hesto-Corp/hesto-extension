@@ -118,6 +118,28 @@ export function findPriceNearby(actionableElement: HTMLElement): number | null {
   return null;
 }
 
+// Define a recursive function to find the product data
+function findProductData(jsonData: any): any | null {
+  // Base case: if the current object is a Product
+  if (jsonData['@type'] === 'Product') {
+    return jsonData;
+  }
+
+  // If it's an object, check all keys
+  if (typeof jsonData === 'object' && jsonData !== null) {
+    for (const key in jsonData) {
+      if (jsonData.hasOwnProperty(key)) {
+        const result = findProductData(jsonData[key]); // Recursive call
+        if (result) {
+          return result; // Return the product data as soon as it's found
+        }
+      }
+    }
+  }
+
+  return null; // Return null if no product is found
+}
+
 // Function to extract JSON-LD structured data (schema.org)
 export function extractJSONLD(): ProductData | null {
   const scriptTags = document.querySelectorAll('script[type="application/ld+json"]');
@@ -131,35 +153,29 @@ export function extractJSONLD(): ProductData | null {
       try {
         const jsonData = JSON.parse(jsonText);
 
-        // Check if the JSON data is of type Product
-        if (jsonData['@type'] === 'Product') {
+        // Use the recursive function to find the Product data
+        const product = findProductData(jsonData);
+
+        if (product) {
+          // Extract product details
           let price: number | null = null;
           let currency: string | null = null;
           let availability: string | null = null;
 
-          // Check if offers is an AggregateOffer or a single Offer
-          if (jsonData.offers) {
-            if (jsonData.offers['@type'] === 'AggregateOffer') {
-              // If it's an AggregateOffer, extract lowPrice or highPrice
-              price = jsonData.offers.lowPrice ? parseFloat(jsonData.offers.lowPrice) : null;
-              currency = jsonData.offers.priceCurrency || null;
-              availability = jsonData.offers.availability || null;
-            } else if (jsonData.offers['@type'] === 'Offer') {
-              // If it's a single Offer
-              price = jsonData.offers.price ? parseFloat(jsonData.offers.price) : null;
-              currency = jsonData.offers.priceCurrency || null;
-              availability = jsonData.offers.availability || null;
-            }
+          if (product.offers) {
+            price = product.offers.price ? parseFloat(product.offers.price) : null;
+            currency = product.offers.priceCurrency || null;
+            availability = product.offers.availability || null;
           }
 
-          // Populate product data
+          // Populate the product data
           productData = {
-            name: jsonData.name || null,
+            name: product.name || null,
             price: price,
             currency: currency,
             availability: availability,
-            image: jsonData.image || null,
-            description: jsonData.description || null,
+            image: product.image ? product.image[0] || null : null, // Use the first image if multiple are present
+            description: product.description || null,
             url: window.location.href || null  // Add current page URL
           };
           break; // Exit loop once the product data is found
@@ -193,27 +209,6 @@ export function extractAmazonProduct(): ProductData | null {
   // Extract the product name (typically in the 'productTitle' id)
   const name = (document.getElementById('productTitle') as HTMLDivElement)?.textContent?.trim() || null;
 
-  // Attempt to extract price using priceValue or fallback to price-integer and price-fraction
-  // let fullPrice: number | null = null;
-  // // First, check if priceValue has the full price
-  // const priceValue = (document.getElementById('priceValue') as HTMLDivElement)?.getAttribute('value');
-  // // Extract the currency symbol either from priceSymbol or symbolOne
-  // const priceSymbol = (document.getElementById('priceSymbol') as HTMLDivElement)?.getAttribute('value') || null;
-  // const fallbackSymbol = (document.getElementById('symbolOne') as HTMLDivElement)?.textContent?.trim() || '$';
-
-  // const currencySymbol = priceSymbol || fallbackSymbol;
-  // const currency = currencySymbolMap[currencySymbol] || 'USD'; // Default to USD if the symbol is not mapped
-
-  // if (priceValue) {
-  //   // If priceValue is available, use it directly
-  //   fullPrice = parseFloat(priceValue) || null;
-  // } else {
-  //   // Otherwise, fallback to price-integer and price-fraction
-  //   const priceInteger = (document.getElementById('price-integer') as HTMLDivElement)?.textContent?.trim() || '0';
-  //   const priceFraction = (document.getElementById('price-fraction') as HTMLDivElement)?.textContent?.trim() || '00';
-  //   fullPrice = parseFloat(`${priceInteger}.${priceFraction}`) || null; // Convert to number
-  // }
-  //
   const currencySymbol = document.querySelector('.a-price-symbol')?.textContent?.trim() || '$';
   const currency = currencySymbolMap[currencySymbol] || 'USD'; // Map the symbol to currency code
 
@@ -273,6 +268,8 @@ export function extractProductData(): ProductData {
       return productData;
     }
   }
+  // TODO: ASOS.
+  // Last Resort: Regex Query to find xx.xx Format
 
   const extractedData = extractJSONLD();
   if (extractedData !== null) {
