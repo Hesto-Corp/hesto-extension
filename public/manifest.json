@@ -37,5 +37,12 @@
   "host_permissions": [
     "https://*/*",
     "http://*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["specifiers.json"],
+      "matches": ["<all_urls>"]
+    }
   ]
+
 }

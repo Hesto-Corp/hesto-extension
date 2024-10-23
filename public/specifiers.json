@@ -1,0 +1,20 @@
+{
+  "amazon.com": {
+    "name": "#productTitle",
+    "currencySymbol": ".a-price-symbol",
+    "priceWhole": ".a-price-whole",
+    "priceFraction": ".a-price-fraction",
+    "image": "#landingImage",
+    "description": "#productDescription",
+    "availability": "#availability .a-declarative"
+  },
+  "forever21.com": {
+    "name": "meta[property='og:title']",
+    "currencySymbol": ".product-price-currency-symbol",
+    "priceWhole": ".product-price-whole",
+    "priceFraction": ".product-price-fraction",
+    "image": "meta[property='og:image']",
+    "description": ".product-description",
+    "availability": ".availability-status"
+  }
+}

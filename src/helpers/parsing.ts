@@ -204,6 +204,12 @@ const currencySymbolMap: Record<string, string> = {
   'A$': 'AUD'    // Australian Dollar
 };
 
+export async function loadSpecifiers() {
+  const url = chrome.runtime.getURL('specifiers.json');
+  const response = await fetch(url);
+  return response.json();
+}
+
 // Function to extract product data from Amazon and return as ProductData
 export function extractAmazonProduct(): ProductData | null {
   // Extract the product name (typically in the 'productTitle' id)
@@ -245,12 +251,67 @@ export function extractAmazonProduct(): ProductData | null {
   };
 }
 
-// Call the function and log the result
-const productData = extractAmazonProduct();
-console.log(productData);
+async function getSpecifiersForWebsite() {
+  const hostname = window.location.hostname;
+  const specifiers = await loadSpecifiers();
+  for (const website in specifiers) {
+    if (hostname.includes(website)) {
+      return specifiers[website];
+    }
+  }
+  return null;
+}
 
-export function extractProductData(): ProductData {
+// Generalized product extraction function
+async function extractProductDataFromSpecifiers(): Promise<ProductData | null> {
+  const specifiers = await getSpecifiersForWebsite(); // Wait for the specifiers to be loaded
+  if (!specifiers) {
+    console.warn('No specifiers available for this website.');
+    return null;
+  }
 
+  console.log("Specifiers: ", specifiers)
+
+  // Extract product name
+  const name = document.querySelector(specifiers.name)?.textContent?.trim() || null;
+  console.log("Name: ", name)
+
+  // Extract currency symbol and map to currency code
+  const currencySymbol = document.querySelector(specifiers.currencySymbol)?.textContent?.trim() || '$';
+  const currency = currencySymbolMap[currencySymbol] || 'USD';
+
+  // Extract price whole and fraction
+  const priceWhole = document.querySelector(specifiers.priceWhole)?.textContent?.replace(/[.,]/g, '').trim() || '0';
+  const priceFraction = document.querySelector(specifiers.priceFraction)?.textContent?.trim() || '00';
+  const fullPrice = parseFloat(`${priceWhole}.${priceFraction}`) || null;
+  console.log("Price: ", fullPrice)
+
+  // Extract image URL
+  const image = document.querySelector(specifiers.image)?.src || null;
+  console.log("Image: ", image)
+
+  // Extract description
+  const description = document.querySelector(specifiers.description)?.textContent?.trim() || null;
+
+  // Extract availability
+  const availability = document.querySelector(specifiers.availability)?.textContent?.trim() || null;
+
+  // Get the current page URL
+  const url = window.location.href;
+
+  // Return the extracted data
+  return {
+    name,
+    price: fullPrice,
+    currency,
+    url,
+    image,
+    description,
+    availability
+  };
+}
+
+export async function extractProductData(): Promise<ProductData> {
   let productData: ProductData = {
     name: null,
     price: null,
@@ -261,25 +322,17 @@ export function extractProductData(): ProductData {
     availability: null
   }
 
-  if (window.location.hostname.includes('amazon.com')) {
-     const data = extractAmazonProduct();
-    if (data != null) {
-      productData = data;
-      return productData;
-    }
-  }
-  // TODO: ASOS.
-  // Last Resort: Regex Query to find xx.xx Format
-
   const extractedData = extractJSONLD();
   if (extractedData !== null) {
     productData = extractedData;
-    console.log('Extracted Product:', productData);
   } else {
     // Do other techniques
-    console.log('No product data found.');
-    // findPriceNearby, etc
+    console.log("Extracting from Specifiers!");
+    const data = await extractProductDataFromSpecifiers(); // Use await to wait for the promise to resolve
+    if (data) {
+      productData = data;
+    }
   }
 
-  return productData;
+  return productData; // This will now wait for the async extraction to complete
 }

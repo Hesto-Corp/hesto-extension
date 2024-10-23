@@ -4,7 +4,7 @@ import { triggerPopup } from '../helpers/triggerPopup'
 import { setProductData } from '../types/product'
 
 // Event listener for click events to detect purchasing intent
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
   const target = event.target as HTMLElement;
 
   console.log('Clicked element:', target);
@@ -16,7 +16,7 @@ document.addEventListener('click', (event) => {
     console.log('Detected purchasing intent based on actionable element:', actionableElement);
 
     // TODO: Handle Null case, just don't do any detection in that case!
-    const product_data = extractProductData()
+    const product_data = await extractProductData()
     console.log("Extracted Data: ", product_data)
 
     if (product_data.name && product_data.price && product_data.url) {
